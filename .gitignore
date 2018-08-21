@@ -34,3 +34,5 @@ ClientUnity/Unity/PeerCCUnity/Assets/Plugins/WSA/x64/*.pdb
 ClientUnity/Unity/PeerCCUnity/Library
 ClientUnity/Unity/PeerCCUnity/UnityPackageManager
 ClientUnity/Unity/PeerCCUnity/UWP
+Client/ecc-key.p12
+ClientCore/Config.cs
