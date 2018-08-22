@@ -819,6 +819,8 @@ namespace PeerConnectionClient.Signalling
 
             double index = (double)evt.Candidate.SdpMLineIndex;
 
+            CallStatsClient.FabricSetupLocalCandidate(evt.Candidate.Candidate);
+
             JsonObject json;
 #if ORTCLIB
             if (RTCPeerConnectionSignalingMode.Json == _signalingMode)
@@ -1181,7 +1183,7 @@ namespace PeerConnectionClient.Signalling
 #else
                     await _peerConnection.AddIceCandidate(candidate);
 #endif
-
+                    CallStatsClient.FabricSetupRemoteCandidate(candidate.Candidate);
 
                     Debug.WriteLine("Conductor: Received candidate : " + message);
                 }
