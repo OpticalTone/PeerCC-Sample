@@ -92,6 +92,9 @@ namespace PeerConnectionClient
         private SSRCMapData ssrcMapData = new SSRCMapData();
         private static List<SSRCData> ssrcDataList = new List<SSRCData>();
 
+        private ConferenceStatsSubmissionData conferenceStatsSubmissionData = new ConferenceStatsSubmissionData();
+        private List<Stats> confSubmissionStatsList = new List<Stats>();
+
         public async Task InitializeCallStats()
         {
             fabricSetupData.localID = _localID;
@@ -117,16 +120,53 @@ namespace PeerConnectionClient
             ssrcMapData.remoteID = _remoteID;
             ssrcMapData.ssrcData = ssrcDataList;
 
+            Stats confSubmissionStats = new Stats();
+            confSubmissionStats.tracks = "tracks";
+            confSubmissionStats.candidatePairs = "3";
+            confSubmissionStats.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            confSubmissionStatsList.Add(confSubmissionStats);
+
+            conferenceStatsSubmissionData.localID = _localID;
+            conferenceStatsSubmissionData.originID = _originID;
+            conferenceStatsSubmissionData.deviceID = _deviceID;
+            conferenceStatsSubmissionData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            conferenceStatsSubmissionData.connectionID = _connectionID;
+            conferenceStatsSubmissionData.remoteID = _remoteID;
+            conferenceStatsSubmissionData.stats = confSubmissionStatsList;
+
             await callstats.StepsToIntegrate(
                 CreateConference(),
                 UserAlive(),
                 fabricSetupData,  
                 FabricSetupFailed(), 
-                ssrcMapData, null, null, null
-                //conferenceStatsSubmissionData,
-                //FabricTerminated(),
-                //UserLeft()
-                );
+                ssrcMapData, 
+                conferenceStatsSubmissionData,
+                FabricTerminated(), 
+                UserLeft());
+        }
+
+        private UserLeftData UserLeft()
+        {
+            UserLeftData userLeftData = new UserLeftData();
+            userLeftData.localID = _localID;
+            userLeftData.originID = "SampleOrigin";
+            userLeftData.deviceID = GetLocalPeerName();
+            userLeftData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+
+            return userLeftData;
+        }
+
+        private FabricTerminatedData FabricTerminated()
+        {
+            FabricTerminatedData fabricTerminatedData = new FabricTerminatedData();
+            fabricTerminatedData.localID = _localID;
+            fabricTerminatedData.originID = "SampleOrigin";
+            fabricTerminatedData.deviceID = GetLocalPeerName();
+            fabricTerminatedData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            fabricTerminatedData.connectionID = "SampleConnection";
+            fabricTerminatedData.remoteID = "RemotePeer";
+
+            return fabricTerminatedData;
         }
 
         private enum StreamType { inbound, outbound }
@@ -139,16 +179,12 @@ namespace PeerConnectionClient
 
             foreach (var d in dict)
             {
-                Debug.WriteLine($"!!!key1: {d.Key}, value1: {d.Value}");
-
                 SSRCData ssrcData = new SSRCData();
 
                 ssrcData.ssrc = d.Key;
 
                 foreach (var k in d.Value)
                 {
-                    Debug.WriteLine($"!!!key2: {k.Key}, value2: {k.Value}");
-
                     if (k.Key == "cname") ssrcData.cname = k.Value;
                     if (k.Key == "msid") ssrcData.msid = k.Value;
                     if (k.Key == "mslabel") ssrcData.mslabel = k.Value;
