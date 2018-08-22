@@ -34,7 +34,7 @@ namespace PeerConnectionClient
         private static string _connectionID = "SampleConnection";
         private static string _remoteID = "RemotePeer";
 
-        public static string GenerateJWT()
+        private static string GenerateJWT()
         {
             var header = new Dictionary<string, object>()
             {
@@ -61,7 +61,7 @@ namespace PeerConnectionClient
                     if (new FileInfo(eccKey).Length != 0)
                     {
                         return JWT.Encode(payload, new X509Certificate2(eccKey,
-                            (string)Config.localSettings.Values["password"]).GetECDsaPrivateKey(),
+                            (string)Config.localSettings.Values["secret"]).GetECDsaPrivateKey(),
                             JwsAlgorithm.ES256, extraHeaders: header);
                     }
                     else
@@ -156,7 +156,6 @@ namespace PeerConnectionClient
 
         public static void FabricSetupLocalCandidate(string candidateStr)
         {
-            //string candidateStr = evt.Candidate.Candidate;
             string candidate = candidateStr.Substring(candidateStr.LastIndexOf(':') + 1);
 
             string[] separatingChars = { " " };
