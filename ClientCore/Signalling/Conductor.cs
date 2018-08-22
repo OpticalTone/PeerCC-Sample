@@ -1119,6 +1119,8 @@ namespace PeerConnectionClient.Signalling
                         return;
                     }
 
+                    CallStatsClient.SSRCMapDataSetup(sdp);
+
 #if ORTCLIB
                     RTCSessionDescriptionSignalingType messageType = RTCSessionDescriptionSignalingType.SdpOffer;
                     switch (type)

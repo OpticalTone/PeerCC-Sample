@@ -89,6 +89,9 @@ namespace PeerConnectionClient
         private enum RemoteEndpointType { peer, server }
         private enum IceCandidateState { frozen, waiting, inprogress, failed, succeeded, cancelled }
 
+        private SSRCMapData ssrcMapData = new SSRCMapData();
+        private static List<SSRCData> ssrcDataList = new List<SSRCData>();
+
         public async Task InitializeCallStats()
         {
             fabricSetupData.localID = _localID;
@@ -106,16 +109,106 @@ namespace PeerConnectionClient
             fabricSetupData.remoteIceCandidates = remoteIceCandidatesList;
             fabricSetupData.iceCandidatePairs = iceCandidatePairsList;
 
+            ssrcMapData.localID = _localID;
+            ssrcMapData.originID = _originID;
+            ssrcMapData.deviceID = _deviceID;
+            ssrcMapData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            ssrcMapData.connectionID = _connectionID;
+            ssrcMapData.remoteID = _remoteID;
+            ssrcMapData.ssrcData = ssrcDataList;
+
             await callstats.StepsToIntegrate(
                 CreateConference(),
                 UserAlive(),
-                fabricSetupData, null, null, null, null, null
-                //FabricSetupFailed(),
-                //ssrcMapData,
+                fabricSetupData,  
+                FabricSetupFailed(), 
+                ssrcMapData, null, null, null
                 //conferenceStatsSubmissionData,
                 //FabricTerminated(),
                 //UserLeft()
                 );
+        }
+
+        private enum StreamType { inbound, outbound }
+        private enum ReportType { local, remote }
+        private enum MediaType { audio, video, screen }
+
+        public static void SSRCMapDataSetup(string sdp)
+        {
+            var dict = ParseSdp(sdp, "a=ssrc:");
+
+            foreach (var d in dict)
+            {
+                Debug.WriteLine($"!!!key1: {d.Key}, value1: {d.Value}");
+
+                SSRCData ssrcData = new SSRCData();
+
+                ssrcData.ssrc = d.Key;
+
+                foreach (var k in d.Value)
+                {
+                    Debug.WriteLine($"!!!key2: {k.Key}, value2: {k.Value}");
+
+                    if (k.Key == "cname") ssrcData.cname = k.Value;
+                    if (k.Key == "msid") ssrcData.msid = k.Value;
+                    if (k.Key == "mslabel") ssrcData.mslabel = k.Value;
+                    if (k.Key == "label") ssrcData.label = k.Value;
+                }
+
+                ssrcData.streamType = StreamType.inbound.ToString();
+                ssrcData.reportType = ReportType.local.ToString();
+                ssrcData.mediaType = MediaType.audio.ToString();
+                ssrcData.userID = GetLocalPeerName();
+
+                ssrcData.localStartTime = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+
+                ssrcDataList.Add(ssrcData);
+            }
+        }
+
+        private static Dictionary<string, Dictionary<string, string>> ParseSdp(string sdp, string searchFirstStr)
+        {
+            var dict = new Dictionary<string, Dictionary<string, string>>();
+
+            List<string> listSdpLines = sdp.Split('\n').ToList();
+            List<string> listFirstStr = new List<string>();
+
+            string firstId = string.Empty;
+
+            string searchFirstId = searchFirstStr + firstId;
+
+            for (int i = 0; i < listSdpLines.Count; i++)
+            {
+                if (listSdpLines[i].StartsWith(searchFirstStr))
+                    listFirstStr.Add(listSdpLines[i]);
+            }
+
+            for (int i = 0; i < listFirstStr.Count; i++)
+            {
+                int statrtIndex = listFirstStr[i].IndexOf(":") + 1;
+                int endIndex = listFirstStr[i].IndexOf(" ");
+
+                string id = listFirstStr[i].Substring(statrtIndex, endIndex - statrtIndex);
+
+                if (id != firstId)
+                {
+                    firstId = id;
+                    dict.Add(firstId, new Dictionary<string, string>());
+                }
+
+                int start = searchFirstId.Length + 1;
+
+                string sub = listFirstStr[i].Substring(start);
+
+                int startValue = sub.IndexOf(":");
+                int startProperty = sub.IndexOf(" ") + 1;
+
+                string property = sub.Substring(startProperty, startValue - startProperty);
+                string value = sub.Substring(startValue + 1);
+
+                dict[firstId].Add(property, value);
+            }
+            return dict;
         }
 
         private enum EndpointInfoType { browser, native, plugin, middlebox }
@@ -230,6 +323,29 @@ namespace PeerConnectionClient
             await Task.Delay(20000);
             Debug.WriteLine("FabricSetup: ");
             var fabricStatus = await callstats.FabricSetup(fabricSetupData);
+        }
+
+        private enum FabricSetupFailedReason
+        {
+            MediaConfigError, MediaPermissionError, MediaDeviceError, NegotiationFailure,
+            SDPGenerationError, TransportFailure, SignalingError, IceConnectionFailure
+        }
+
+        private FabricSetupFailedData FabricSetupFailed()
+        {
+            FabricSetupFailedData fabricSetupFailedData = new FabricSetupFailedData();
+            fabricSetupFailedData.localID = _localID;
+            fabricSetupFailedData.originID = "SampleOrigin";
+            fabricSetupFailedData.deviceID = GetLocalPeerName();
+            fabricSetupFailedData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            fabricSetupFailedData.fabricTransmissionDirection = FabricTransmissionDirection.sendrecv.ToString();
+            fabricSetupFailedData.remoteEndpointType = RemoteEndpointType.peer.ToString();
+            fabricSetupFailedData.reason = FabricSetupFailedReason.SignalingError.ToString();
+            fabricSetupFailedData.name = "name";
+            fabricSetupFailedData.message = "message";
+            fabricSetupFailedData.stack = "stack";
+
+            return fabricSetupFailedData;
         }
 
         /// <summary>
