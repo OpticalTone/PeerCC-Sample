@@ -624,6 +624,7 @@ namespace PeerConnectionClient.Signalling
             {
                 CallStatsClient callStatsClient = new CallStatsClient();
                 Task task = callStatsClient.InitializeCallStats();
+                Task fabricSetup = callStatsClient.FabricSetup();
             }
             catch (Exception ex)
             {

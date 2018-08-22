@@ -225,7 +225,12 @@ namespace PeerConnectionClient
             iceCandidatePairsList.Add(iceCandidatePairObj);
         }
 
-
+        public async Task FabricSetup()
+        {
+            await Task.Delay(20000);
+            Debug.WriteLine("FabricSetup: ");
+            var fabricStatus = await callstats.FabricSetup(fabricSetupData);
+        }
 
         /// <summary>
         /// Constructs and returns the local peer name.

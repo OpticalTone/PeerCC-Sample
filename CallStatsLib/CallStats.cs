@@ -137,7 +137,7 @@ namespace CallStatsLib
 
         #region Fabric Events 
 
-        private async Task<Tuple<HttpStatusCode, string>> FabricSetup(FabricSetupData fabricSetupData)
+        public async Task<Tuple<HttpStatusCode, string>> FabricSetup(FabricSetupData fabricSetupData)
         {
             return await SendRequest(fabricSetupData, UrlBuilder(Host.events.ToString(),
                 $"/v1/apps/{_appID}/conferences/{_confID}/{_ucID}/events/fabric/setup"));
