@@ -90,7 +90,7 @@ namespace PeerConnectionClient
         private enum IceCandidateState { frozen, waiting, inprogress, failed, succeeded, cancelled }
 
         private SSRCMapData ssrcMapData = new SSRCMapData();
-        private static List<SSRCData> ssrcDataList = new List<SSRCData>();
+        private List<SSRCData> ssrcDataList = new List<SSRCData>();
 
         private ConferenceStatsSubmissionData conferenceStatsSubmissionData = new ConferenceStatsSubmissionData();
         private List<Stats> confSubmissionStatsList = new List<Stats>();
@@ -143,6 +143,136 @@ namespace PeerConnectionClient
                 conferenceStatsSubmissionData,
                 FabricTerminated(), 
                 UserLeft());
+
+            //Debug.WriteLine("FabricStateChange: ");
+            //await callstats.FabricStateChange(FabricStateChange());
+
+            //Debug.WriteLine("FabricTransportChange: ");
+            //await callstats.FabricTransportChange(FabricTransportChange());
+
+            //Debug.WriteLine("FabricDropped: ");
+            //await callstats.FabricDropped(FabricDropped());
+
+            //Debug.WriteLine("FabricAction: ");
+            //await callstats.FabricAction(FabricAction());
+
+            //Debug.WriteLine("SystemStatusStatsSubmission: ");
+            //await callstats.SystemStatusStatsSubmission(SystemStatusStatsSubmission());
+
+            //Debug.WriteLine("IceDisruptionStart: ");
+            //await callstats.IceDisruptionStart(IceDisruptionStart());
+
+            //Debug.WriteLine("IceDisruptionEnd: ");
+            //await callstats.IceDisruptionEnd(IceDisruptionEnd());
+
+            //Debug.WriteLine("IceRestart: ");
+            //await callstats.IceRestart(IceRestart());
+
+            //Debug.WriteLine("IceFailed: ");
+            //await callstats.IceFailed(IceFailed());
+
+            //Debug.WriteLine("IceAborted: ");
+            //await callstats.IceAborted(IceAborted());
+
+            //Debug.WriteLine("IceTerminated: ");
+            //await callstats.IceTerminated(IceTerminated());
+
+            //Debug.WriteLine("IceConnectionDisruptionStart: ");
+            //await callstats.IceConnectionDisruptionStart(IceConnectionDisruptionStart());
+
+            //Debug.WriteLine("IceConnectionDisruptionEnd: ");
+            //await callstats.IceConnectionDisruptionEnd(IceConnectionDisruptionEnd());
+
+            //Debug.WriteLine("MediaAction: ");
+            //await callstats.MediaAction(MediaAction());
+
+            //Debug.WriteLine("MediaPlayback: ");
+            //await callstats.MediaPlayback(MediaPlayback());
+
+            //Debug.WriteLine("ConnectedOrActiveDevices: ");
+            //await callstats.ConnectedOrActiveDevices(ConnectedOrActiveDevices());
+
+            //Debug.WriteLine("ApplicationErrorLogs: ");
+            //await callstats.ApplicationErrorLogs(ApplicationErrorLogs());
+
+            //Debug.WriteLine("ConferenceUserFeedback: ");
+            //await callstats.ConferenceUserFeedback(ConferenceUserFeedback());
+
+            //Debug.WriteLine("DominantSpeaker: ");
+            //await callstats.DominantSpeaker(DominantSpeaker());
+
+            //Debug.WriteLine("SDPEvent: ");
+            //await callstats.SDPEvent(SDPEvent());
+
+            //Debug.WriteLine("BridgeStatistics: ");
+            //await callstats.BridgeStatistics(BridgeStatistics());
+
+            //Debug.WriteLine("BridgeAlive: ");
+            //await callstats.BridgeAlive(BridgeAlive());
+
+            //System.Timers.Timer timer = new System.Timers.Timer(30000);
+            //timer.Elapsed += async (sender, e) =>
+            //{
+            //    Debug.WriteLine("BridgeAlive: ");
+            //    await callstats.BridgeAlive(BridgeAliveData());
+            //};
+            //timer.Start();
+        }
+
+        private enum ChangedState { signalingState, connectionState, iceConnectionState, iceGatheringState }
+
+        public async void FabricStateChangeStableToRemoteOffer()
+        {
+            FabricStateChangeData fabricStateChangeData = new FabricStateChangeData();
+
+            fabricStateChangeData.localID = _localID;
+            fabricStateChangeData.originID = _originID;
+            fabricStateChangeData.deviceID = _deviceID;
+            fabricStateChangeData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            fabricStateChangeData.connectionID = _connectionID;
+            fabricStateChangeData.remoteID = _remoteID;
+            fabricStateChangeData.prevState = StateChange.stable.ToString();
+            fabricStateChangeData.newState = StateChange.haveRemoteOffer.ToString();
+            fabricStateChangeData.changedState = ChangedState.signalingState.ToString();
+
+            Debug.WriteLine("FabricStateChange: ");
+            await callstats.FabricStateChange(fabricStateChangeData);
+        }
+
+        public async void FabricStateChangeStableToLocalOffer()
+        {
+            FabricStateChangeData fabricStateChangeData = new FabricStateChangeData();
+
+            fabricStateChangeData.localID = _localID;
+            fabricStateChangeData.originID = _originID;
+            fabricStateChangeData.deviceID = _deviceID;
+            fabricStateChangeData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            fabricStateChangeData.connectionID = _connectionID;
+            fabricStateChangeData.remoteID = _remoteID;
+            fabricStateChangeData.prevState = StateChange.stable.ToString();
+            fabricStateChangeData.newState = StateChange.haveLocalOffer.ToString();
+            fabricStateChangeData.changedState = ChangedState.signalingState.ToString();
+
+            Debug.WriteLine("FabricStateChange: ");
+            await callstats.FabricStateChange(fabricStateChangeData);
+        }
+
+        public async void FabricStateChangeRemoteOfferToStable()
+        {
+            FabricStateChangeData fabricStateChangeData = new FabricStateChangeData();
+
+            fabricStateChangeData.localID = _localID;
+            fabricStateChangeData.originID = _originID;
+            fabricStateChangeData.deviceID = _deviceID;
+            fabricStateChangeData.timestamp = DateTime.UtcNow.ToUnixTimeStampMiliseconds();
+            fabricStateChangeData.connectionID = _connectionID;
+            fabricStateChangeData.remoteID = _remoteID;
+            fabricStateChangeData.prevState = StateChange.haveRemoteOffer.ToString();
+            fabricStateChangeData.newState = StateChange.stable.ToString();
+            fabricStateChangeData.changedState = ChangedState.signalingState.ToString();
+
+            Debug.WriteLine("FabricStateChange: ");
+            await callstats.FabricStateChange(fabricStateChangeData);
         }
 
         private UserLeftData UserLeft()
@@ -173,7 +303,7 @@ namespace PeerConnectionClient
         private enum ReportType { local, remote }
         private enum MediaType { audio, video, screen }
 
-        public static void SSRCMapDataSetup(string sdp)
+        public void SSRCMapDataSetup(string sdp)
         {
             var dict = ParseSdp(sdp, "a=ssrc:");
 
@@ -279,11 +409,11 @@ namespace PeerConnectionClient
             return data;
         }
 
-        private static List<IceCandidate> localIceCandidatesList = new List<IceCandidate>();
-        private static List<IceCandidate> remoteIceCandidatesList = new List<IceCandidate>();
-        private static List<IceCandidatePair> iceCandidatePairsList = new List<IceCandidatePair>();
+        private List<IceCandidate> localIceCandidatesList = new List<IceCandidate>();
+        private List<IceCandidate> remoteIceCandidatesList = new List<IceCandidate>();
+        private List<IceCandidatePair> iceCandidatePairsList = new List<IceCandidatePair>();
 
-        public static void FabricSetupLocalCandidate(string candidateStr)
+        public void FabricSetupLocalCandidate(string candidateStr)
         {
             string candidate = candidateStr.Substring(candidateStr.LastIndexOf(':') + 1);
 
@@ -314,7 +444,7 @@ namespace PeerConnectionClient
             localIceCandidatesList.Add(localIceCandidateObj);
         }
 
-        public static void FabricSetupRemoteCandidate(string candidate)
+        public void FabricSetupRemoteCandidate(string candidate)
         {
             string[] separatingChars = { " " };
             string[] words = candidate.Split(separatingChars, StringSplitOptions.None);
@@ -409,5 +539,18 @@ namespace PeerConnectionClient
         {
             return (long)Math.Round((dateTimeUtc.ToUniversalTime() - UnixEpoch).TotalMilliseconds);
         }
+    }
+
+    public static class StateChange
+    {
+        public const string stable = "stable";
+        public const string haveLocalOffer = "have-local-offer";
+        public const string haveRemoteOffer = "have-remote-offer";
+        public const string haveLocalPranswer = "have-local-pranswer";
+        public const string haveRemotePranswer = "have-remote-pranswer";
+        public const string closed = "closed";
+
+        // Documentation: Invalid signalingState 442
+        // "new", "connecting", "connected", "failed", "checking", "completed", "gathering", "complete" 
     }
 }

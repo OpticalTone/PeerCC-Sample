@@ -46,6 +46,9 @@ namespace PeerConnectionClient.Signalling
     /// </summary>
     public class Conductor
     {
+
+        CallStatsClient callStatsClient = new CallStatsClient();
+
         public class Peer
         {
             public int Id { get; set; }
@@ -622,7 +625,6 @@ namespace PeerConnectionClient.Signalling
 
             try
             {
-                CallStatsClient callStatsClient = new CallStatsClient();
                 Task task = callStatsClient.InitializeCallStats();
                 Task fabricSetup = callStatsClient.FabricSetup();
             }
@@ -831,7 +833,7 @@ namespace PeerConnectionClient.Signalling
 
             double index = (double)evt.Candidate.SdpMLineIndex;
 
-            CallStatsClient.FabricSetupLocalCandidate(evt.Candidate.Candidate);
+            callStatsClient.FabricSetupLocalCandidate(evt.Candidate.Candidate);
 
             JsonObject json;
 #if ORTCLIB
@@ -1119,7 +1121,7 @@ namespace PeerConnectionClient.Signalling
                         return;
                     }
 
-                    CallStatsClient.SSRCMapDataSetup(sdp);
+                    callStatsClient.SSRCMapDataSetup(sdp);
 
 #if ORTCLIB
                     RTCSessionDescriptionSignalingType messageType = RTCSessionDescriptionSignalingType.SdpOffer;
@@ -1144,6 +1146,8 @@ namespace PeerConnectionClient.Signalling
                     Debug.WriteLine("Conductor: Received session description: " + message);
                     await _peerConnection.SetRemoteDescription(new RTCSessionDescription(messageType, sdp));
 
+                    callStatsClient.FabricStateChangeStableToRemoteOffer();
+
 #if ORTCLIB
                     if ((messageType == RTCSessionDescriptionSignalingType.SdpOffer) ||
                         ((created) && (messageType == RTCSessionDescriptionSignalingType.Json)))
@@ -1153,6 +1157,9 @@ namespace PeerConnectionClient.Signalling
                     {
                         var answer = await _peerConnection.CreateAnswer();
                         await _peerConnection.SetLocalDescription(answer);
+
+                        callStatsClient.FabricStateChangeRemoteOfferToStable();
+
                         // Send answer
                         SendSdp(answer);
 #if ORTCLIB
@@ -1197,7 +1204,7 @@ namespace PeerConnectionClient.Signalling
 #else
                     await _peerConnection.AddIceCandidate(candidate);
 #endif
-                    CallStatsClient.FabricSetupRemoteCandidate(candidate.Candidate);
+                    callStatsClient.FabricSetupRemoteCandidate(candidate.Candidate);
 
                     Debug.WriteLine("Conductor: Received candidate : " + message);
                 }
@@ -1273,6 +1280,9 @@ namespace PeerConnectionClient.Signalling
                 offer.Sdp = newSdp;
 #endif
                 await _peerConnection.SetLocalDescription(offer);
+
+                callStatsClient.FabricStateChangeStableToLocalOffer();
+
                 Debug.WriteLine("Conductor: Sending offer.");
                 SendSdp(offer);
 #if ORTCLIB
