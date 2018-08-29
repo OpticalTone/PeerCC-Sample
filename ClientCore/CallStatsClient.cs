@@ -83,7 +83,7 @@ namespace PeerConnectionClient
             }
         }
 
-        private CallStats callstats = new CallStats(_localID, _appID, _keyID, _confID, GenerateJWT());
+        private CallStats callstats;
         private FabricSetupData fabricSetupData = new FabricSetupData();
         private enum FabricTransmissionDirection { sendrecv, sendonly, receiveonly }
         private enum RemoteEndpointType { peer, server }
@@ -97,6 +97,8 @@ namespace PeerConnectionClient
 
         public async Task InitializeCallStats()
         {
+            callstats = new CallStats(_localID, _appID, _keyID, _confID, GenerateJWT());
+
             fabricSetupData.localID = _localID;
             fabricSetupData.originID = _originID;
             fabricSetupData.deviceID = _deviceID;
